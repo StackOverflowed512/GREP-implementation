@@ -7,46 +7,39 @@ int main(int argc, char *argv[])
 {
     bool caseInsensitive = false;
     bool countOnly = false;
+    bool useRegex = false;
     string filename, pat;
 
-    if (argc == 4)
+    // Parse command line arguments
+    if (argc >= 3)
     {
-        string option = argv[1];
-        if (option == "-i")
+        for (int i = 1; i < argc - 2; i++)
         {
-            caseInsensitive = true;
+            string option = argv[i];
+            if (option == "-i")
+            {
+                caseInsensitive = true;
+            }
+            else if (option == "-c")
+            {
+                countOnly = true;
+            }
+            else if (option == "-E")
+            {
+                useRegex = true;
+            }
         }
-        else if (option == "-c")
-        {
-            countOnly = true;
-        }
-        filename = argv[2];
-        pat = argv[3];
-    }
-    else if (argc == 5)
-    {
-        string option1 = argv[1];
-        string option2 = argv[2];
 
-        if ((option1 == "-i" && option2 == "-c") || (option1 == "-c" && option2 == "-i"))
-        {
-            caseInsensitive = true;
-            countOnly = true;
-        }
-        filename = argv[3];
-        pat = argv[4];
-    }
-    else if (argc == 3)
-    {
-        filename = argv[1];
-        pat = argv[2];
+        filename = argv[argc - 2];
+        pat = argv[argc - 1];
     }
     else
     {
-        cerr << "Usage: " << argv[0] << " [-i] [-c] <filename> <pattern>\n";
+        cerr << "Usage: " << argv[0] << " [-i] [-c] [-E] <filename> <pattern>\n";
         cerr << "Options:\n";
         cerr << "  -i  Case insensitive search\n";
         cerr << "  -c  Count only (print only count of matching lines)\n";
+        cerr << "  -E  Use regular expression pattern\n";
         return 1;
     }
 
@@ -57,36 +50,68 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (caseInsensitive)
-        pat = toLowerCase(pat);
-
     string line;
     int lineNumber = 0;
     int matchCount = 0;
+
+    // For regex matching
+    regex regexPattern;
+    if (useRegex)
+    {
+        try
+        {
+            regexPattern = caseInsensitive ? regex(pat, regex_constants::icase) : regex(pat);
+        }
+        catch (const regex_error &e)
+        {
+            cerr << "Invalid regular expression: " << e.what() << endl;
+            return 1;
+        }
+    }
+    else
+    {
+        if (caseInsensitive)
+            pat = toLowerCase(pat);
+    }
 
     while (getline(file, line))
     {
         lineNumber++;
 
-        string tempLine = line;
-        if (caseInsensitive)
-            tempLine = toLowerCase(tempLine);
+        bool patternFound = false;
 
-        vector<int> res = search(pat, tempLine);
+        if (useRegex)
+        {
+            // Use regex matching
+            if (regex_search(line, regexPattern))
+            {
+                patternFound = true;
+            }
+        }
+        else
+        {
+            // Use KMP matching
+            string tempLine = line;
+            if (caseInsensitive)
+                tempLine = toLowerCase(tempLine);
 
-        if (!res.empty())
+            vector<int> res = search(pat, tempLine);
+            patternFound = !res.empty();
+        }
+
+        if (patternFound)
         {
             matchCount++;
             if (!countOnly)
             {
-                cout << "Pattern found in line " << lineNumber << endl;
+                cout << "Pattern found in line number: " << lineNumber << endl;
             }
         }
     }
 
     if (countOnly)
     {
-        cout << matchCount << endl;
+        cout << "Total matches found: " << matchCount << endl;
     }
     else if (matchCount == 0)
     {

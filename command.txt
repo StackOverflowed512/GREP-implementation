@@ -1,3 +1,6 @@
 g++ main.cpp kmp.cpp utils.cpp -o grep
 ./grep -i <filename> <pattern>
 ./grep -c <filename> <pattern>
+./grep -E -i test.txt "hello|world"
+./grep -E -i test.txt ^h    //start with h
+./grep -E -i test.txt hostel$   //ends with hostel
