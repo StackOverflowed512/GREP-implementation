@@ -6,13 +6,35 @@ using namespace std;
 int main(int argc, char *argv[])
 {
     bool caseInsensitive = false;
+    bool countOnly = false;
     string filename, pat;
 
-    if (argc == 4 && string(argv[1]) == "-i")
+    if (argc == 4)
     {
-        caseInsensitive = true;
+        string option = argv[1];
+        if (option == "-i")
+        {
+            caseInsensitive = true;
+        }
+        else if (option == "-c")
+        {
+            countOnly = true;
+        }
         filename = argv[2];
         pat = argv[3];
+    }
+    else if (argc == 5)
+    {
+        string option1 = argv[1];
+        string option2 = argv[2];
+
+        if ((option1 == "-i" && option2 == "-c") || (option1 == "-c" && option2 == "-i"))
+        {
+            caseInsensitive = true;
+            countOnly = true;
+        }
+        filename = argv[3];
+        pat = argv[4];
     }
     else if (argc == 3)
     {
@@ -21,7 +43,10 @@ int main(int argc, char *argv[])
     }
     else
     {
-        cerr << "Usage: " << argv[0] << " [-i] <filename> <pattern>\n";
+        cerr << "Usage: " << argv[0] << " [-i] [-c] <filename> <pattern>\n";
+        cerr << "Options:\n";
+        cerr << "  -i  Case insensitive search\n";
+        cerr << "  -c  Count only (print only count of matching lines)\n";
         return 1;
     }
 
@@ -37,7 +62,7 @@ int main(int argc, char *argv[])
 
     string line;
     int lineNumber = 0;
-    bool found = false;
+    int matchCount = 0;
 
     while (getline(file, line))
     {
@@ -51,13 +76,22 @@ int main(int argc, char *argv[])
 
         if (!res.empty())
         {
-            cout << "Pattern found in line " << lineNumber << endl;
-            found = true;
+            matchCount++;
+            if (!countOnly)
+            {
+                cout << "Pattern found in line " << lineNumber << endl;
+            }
         }
     }
 
-    if (!found)
+    if (countOnly)
+    {
+        cout << matchCount << endl;
+    }
+    else if (matchCount == 0)
+    {
         cout << "Pattern not found.\n";
+    }
 
     file.close();
     return 0;

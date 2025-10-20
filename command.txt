@@ -1,2 +1,3 @@
 g++ main.cpp kmp.cpp utils.cpp -o grep
-./mygrep [-i] <filename> <pattern>
+./grep -i <filename> <pattern>
+./grep -c <filename> <pattern>
