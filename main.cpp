@@ -1,6 +1,10 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
 #include "kmp.h"
 #include "utils.h"
+#include "regex_engine.h" // Include the custom regex engine
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -54,24 +58,9 @@ int main(int argc, char *argv[])
     int lineNumber = 0;
     int matchCount = 0;
 
-    // For regex matching
-    regex regexPattern;
-    if (useRegex)
+    if (!useRegex && caseInsensitive)
     {
-        try
-        {
-            regexPattern = caseInsensitive ? regex(pat, regex_constants::icase) : regex(pat);
-        }
-        catch (const regex_error &e)
-        {
-            cerr << "Invalid regular expression: " << e.what() << endl;
-            return 1;
-        }
-    }
-    else
-    {
-        if (caseInsensitive)
-            pat = toLowerCase(pat);
+        pat = toLowerCase(pat);
     }
 
     while (getline(file, line))
@@ -82,8 +71,8 @@ int main(int argc, char *argv[])
 
         if (useRegex)
         {
-            // Use regex matching
-            if (regex_search(line, regexPattern))
+            // Use custom regex matching function
+            if (custom_regex_search(pat, line, caseInsensitive))
             {
                 patternFound = true;
             }
