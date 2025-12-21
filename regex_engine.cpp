@@ -1,5 +1,7 @@
 #include "regex_engine.h"
 #include <cctype>
+#include <vector>
+using namespace std;
 
 // Forward declaration for the recursive helper function
 static bool match_here(const char *pattern, const char *text, bool case_insensitive);
@@ -49,6 +51,46 @@ static bool match_here(const char *pattern, const char *text, bool case_insensit
     return false;
 }
 
+/**
+ * @brief 
+ */
+static bool match_alternatives(const string &pattern, const string &text, bool case_insensitive)
+{
+    // Find the pipe character for alternation
+    size_t pipe_pos = pattern.find('|');
+
+    if (pipe_pos == string::npos)
+    {
+        // No alternation, use regular matching
+        const char *p = pattern.c_str();
+        const char *t = text.c_str();
+
+        // Handle '^' anchor for start of the line
+        if (p[0] == '^')
+        {
+            return match_here(p + 1, t, case_insensitive);
+        }
+
+        // Try to match the pattern at every position in the text
+        do
+        {
+            if (match_here(p, t, case_insensitive))
+            {
+                return true;
+            }
+        } while (*t++ != '\0');
+
+        return false;
+    }
+
+    // Split by pipe and try each alternative
+    std::string left = pattern.substr(0, pipe_pos);
+    std::string right = pattern.substr(pipe_pos + 1);
+
+    return match_alternatives(left, text, case_insensitive) ||
+           match_alternatives(right, text, case_insensitive);
+}
+
 bool custom_regex_search(const std::string &pattern, const std::string &text, bool case_insensitive)
 {
     if (pattern.empty())
@@ -56,23 +98,5 @@ bool custom_regex_search(const std::string &pattern, const std::string &text, bo
         return true;
     }
 
-    const char *p = pattern.c_str();
-    const char *t = text.c_str();
-
-    // Handle '^' anchor for start of the line
-    if (p[0] == '^')
-    {
-        return match_here(p + 1, t, case_insensitive);
-    }
-
-    // Try to match the pattern at every position in the text
-    do
-    {
-        if (match_here(p, t, case_insensitive))
-        {
-            return true;
-        }
-    } while (*t++ != '\0');
-
-    return false;
+    return match_alternatives(pattern, text, case_insensitive);
 }
