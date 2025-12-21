@@ -7,7 +7,7 @@ using namespace std;
 static bool match_here(const char *pattern, const char *text, bool case_insensitive);
 
 /**
- * @brief Helper function to compare two characters, considering case-insensitivity.
+ * @brief 
  */
 static bool match_char(char p, char t, bool case_insensitive)
 {
@@ -56,22 +56,21 @@ static bool match_here(const char *pattern, const char *text, bool case_insensit
  */
 static bool match_alternatives(const string &pattern, const string &text, bool case_insensitive)
 {
-    // Find the pipe character for alternation
+    
     size_t pipe_pos = pattern.find('|');
 
     if (pipe_pos == string::npos)
     {
-        // No alternation, use regular matching
+        
         const char *p = pattern.c_str();
         const char *t = text.c_str();
 
-        // Handle '^' anchor for start of the line
+        
         if (p[0] == '^')
         {
             return match_here(p + 1, t, case_insensitive);
         }
 
-        // Try to match the pattern at every position in the text
         do
         {
             if (match_here(p, t, case_insensitive))
