@@ -1,4 +1,5 @@
 #include "kmp.h"
+
 using namespace std;
 
 void constructLps(string &pat, vector<int> &lps)
@@ -60,4 +61,14 @@ vector<int> search(string &pat, string &txt)
     }
 
     return res;
+}
+
+// thin wrapper (returns first match index or -1)
+int kmpSearch(const string &text, const string &pattern)
+{
+    string pat = pattern;
+    string txt = text;
+
+    auto matches = search(pat, txt);
+    return matches.empty() ? -1 : matches[0];
 }

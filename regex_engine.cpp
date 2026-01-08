@@ -1,101 +1,66 @@
 #include "regex_engine.h"
-#include <cctype>
-#include <vector>
+#include "utils.h"
+
 using namespace std;
 
-// Forward declaration for the recursive helper function
-static bool match_here(const char *pattern, const char *text, bool case_insensitive);
-
-/**
- * @brief 
- */
-static bool match_char(char p, char t, bool case_insensitive)
+// match pattern starting at text[i], pattern[j]
+bool matchHere(const string &p, int j, const string &t, int i)
 {
-    if (case_insensitive)
-    {
-        return tolower(p) == tolower(t);
-    }
-    return p == t;
-}
-
-/**
- * @brief Main recursive function to match a pattern at the beginning of a text.
- *
- * This function implements the core logic of the backtracking regex engine.
- * It supports:
- * - `.`: matches any single character.
- * - `*`: matches the preceding element zero or more times.
- * - `^`: matches the beginning of the string (handled in `custom_regex_search`).
- * - `$`: matches the end of the string.
- */
-static bool match_here(const char *pattern, const char *text, bool case_insensitive)
-{
-    if (pattern[0] == '\0')
-    {
+    // pattern finished → success
+    if (j == p.size())
         return true;
-    }
-    if (pattern[1] == '*')
+
+    // next pattern char is '*'
+    if (j + 1 < p.size() && p[j + 1] == '*')
     {
-        // Try matching zero instances of the preceding element, then one or more.
-        return match_here(pattern + 2, text, case_insensitive) ||
-               (*text != '\0' && (pattern[0] == '.' || match_char(pattern[0], *text, case_insensitive)) && match_here(pattern, text + 1, case_insensitive));
+        // try all repetitions of p[j]
+        while (i < t.size() && (p[j] == '.' || p[j] == t[i]))
+        {
+            if (matchHere(p, j + 2, t, i))
+                return true;
+            i++;
+        }
+        return matchHere(p, j + 2, t, i);
     }
-    if (pattern[0] == '$' && pattern[1] == '\0')
-    {
-        return *text == '\0';
-    }
-    if (*text != '\0' && (pattern[0] == '.' || match_char(pattern[0], *text, case_insensitive)))
-    {
-        return match_here(pattern + 1, text + 1, case_insensitive);
-    }
+
+    // anchor $
+    if (p[j] == '$' && j + 1 == p.size())
+        return i == t.size();
+
+    // normal char must match then advance
+    if (i < t.size() && (p[j] == '.' || p[j] == t[i]))
+        return matchHere(p, j + 1, t, i + 1);
+
     return false;
 }
 
-/**
- * @brief 
- */
-static bool match_alternatives(const string &pattern, const string &text, bool case_insensitive)
+bool custom_regex_search(const string &pattern,
+                         const string &text,
+                         bool caseInsensitive)
 {
-    
-    size_t pipe_pos = pattern.find('|');
+    string p = pattern;
+    string t = text;
 
-    if (pipe_pos == string::npos)
+    if (caseInsensitive)
     {
-        
-        const char *p = pattern.c_str();
-        const char *t = text.c_str();
-
-        
-        if (p[0] == '^')
-        {
-            return match_here(p + 1, t, case_insensitive);
-        }
-
-        do
-        {
-            if (match_here(p, t, case_insensitive))
-            {
-                return true;
-            }
-        } while (*t++ != '\0');
-
-        return false;
+        p = toLower(p);
+        t = toLower(t);
     }
 
-    // Split by pipe and try each alternative
-    std::string left = pattern.substr(0, pipe_pos);
-    std::string right = pattern.substr(pipe_pos + 1);
+    // alternation |
+    size_t pos = p.find('|');
+    if (pos != string::npos)
+        return custom_regex_search(p.substr(0, pos), t, false) ||
+               custom_regex_search(p.substr(pos + 1), t, false);
 
-    return match_alternatives(left, text, case_insensitive) ||
-           match_alternatives(right, text, case_insensitive);
-}
+    // anchor ^ (must match from start)
+    if (!p.empty() && p[0] == '^')
+        return matchHere(p, 1, t, 0);
 
-bool custom_regex_search(const std::string &pattern, const std::string &text, bool case_insensitive)
-{
-    if (pattern.empty())
-    {
-        return true;
-    }
+    // otherwise try match anywhere
+    for (int i = 0; i <= (int)t.size(); i++)
+        if (matchHere(p, 0, t, i))
+            return true;
 
-    return match_alternatives(pattern, text, case_insensitive);
+    return false;
 }

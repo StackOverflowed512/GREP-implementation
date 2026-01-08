@@ -3,10 +3,11 @@
 
 #include <string>
 #include <vector>
-using namespace std;
 
-void constructLps(string &pat, vector<int> &lps);
+void constructLps(std::string &pat, std::vector<int> &lps);
+std::vector<int> search(std::string &pat, std::string &txt);
 
-vector<int> search(string &pat, string &txt);
+// wrapper used by main()
+int kmpSearch(const std::string &text, const std::string &pattern);
 
 #endif

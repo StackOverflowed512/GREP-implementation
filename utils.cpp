@@ -1,9 +1,9 @@
 #include "utils.h"
 #include <algorithm>
-using namespace std;
 
-string toLowerCase(string s)
+std::string toLower(const std::string &s)
 {
-    transform(s.begin(), s.end(), s.begin(), ::tolower);
-    return s;
+    std::string r = s;
+    std::transform(r.begin(), r.end(), r.begin(), ::tolower);
+    return r;
 }

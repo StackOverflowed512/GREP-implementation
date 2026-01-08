@@ -2,8 +2,7 @@
 #define UTILS_H
 
 #include <string>
-using namespace std;
 
-string toLowerCase(string s);
+std::string toLower(const std::string &s);
 
 #endif
